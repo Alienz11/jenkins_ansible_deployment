@@ -1,0 +1,22 @@
+- name: Deploy Helm chart from GitHub repository
+  hosts: all
+  become: true
+  vars:
+    repo_url: https://github.com/Alienz11/jenkins_ansible_deployment.git
+    repo_version: main
+    helm_chart_path: helm-chart/
+
+  tasks:
+    - name: Clone repository
+      git:
+        repo: "{{ repo_url }}"
+        dest: /tmp/sock-microservices
+        version: "{{ repo_version }}"
+
+    - name: Install Helm chart
+      community.kubernetes.helm:
+        name: sock-microservices
+        chart_path: "/tmp/sock-microservices/{{ helm_chart_path }}"
+        state: present
+        wait: yes
+        timeout: 600

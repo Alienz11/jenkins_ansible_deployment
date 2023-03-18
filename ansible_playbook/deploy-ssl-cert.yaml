@@ -1,0 +1,29 @@
+- hosts: web
+  tasks:
+    - name: Install Certbot
+      yum:
+        name: certbot
+        state: present
+
+    - name: Obtain certificate
+      command: certbot certonly --standalone --agree-tos --non-interactive --email admin@example.com -d example.com
+
+    - name: Copy certificate to server
+      copy:
+        src: "/etc/letsencrypt/live/example.com/fullchain.pem"
+        dest: "/etc/nginx/ssl/fullchain.pem"
+      notify:
+        - Reload Nginx
+
+    - name: Copy key to server
+      copy:
+        src: "/etc/letsencrypt/live/example.com/privkey.pem"
+        dest: "/etc/nginx/ssl/privkey.pem"
+      notify:
+        - Reload Nginx
+
+  handlers:
+    - name: Reload Nginx
+      service:
+        name: nginx
+        state: reloaded

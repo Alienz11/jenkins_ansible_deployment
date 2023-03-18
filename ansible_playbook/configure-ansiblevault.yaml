@@ -1,0 +1,10 @@
+- hosts: all
+  vars:
+    db_password: !vault |
+                  $ANSIBLE_VAULT;1.1;AES256
+                  62613961316263323531383932353833306430653431653436653430616531613530613332393634
+  tasks:
+    - name: Create database user
+      mysql_user:
+        name: myuser
+        password: "{{ db_password }}"

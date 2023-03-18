@@ -1,0 +1,49 @@
+- name: Install Prometheus
+  hosts: kubernetes
+  become: true
+  gather_facts: true
+  vars:
+    prometheus_version: 2.32.1
+    prometheus_node_exporter_version: 1.2.2
+  tasks:
+    - name: Install prometheus-node-exporter
+      become: true
+      apt:
+        name: prometheus-node-exporter
+        update_cache: yes
+
+    - name: Install prometheus
+      become: true
+      unarchive:
+        src: "https://github.com/prometheus/prometheus/releases/download/v{{ prometheus_version }}/prometheus-{{ prometheus_version }}.linux-amd64.tar.gz"
+        dest: /opt/prometheus
+        remote_src: yes
+        creates: /opt/prometheus/prometheus-{{ prometheus_version }}.linux-amd64
+
+    - name: Configure prometheus
+      copy:
+        src: prometheus.yml
+        dest: /opt/prometheus/prometheus.yml
+      notify: restart prometheus
+
+    - name: Create prometheus systemd unit file
+      copy:
+        src: prometheus.service
+        dest: /etc/systemd/system/prometheus.service
+      notify: reload systemd
+
+    - name: Start prometheus
+      systemd:
+        name: prometheus
+        state: started
+        enabled: yes
+
+  handlers:
+    - name: restart prometheus
+      systemd:
+        name: prometheus
+        state: restarted
+
+    - name: reload systemd
+      systemd:
+        daemon_reload: yes
